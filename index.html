@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MôBem</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Parisienne&family=Sacramento&display=swap" rel="stylesheet">
+    
+    <meta name="color-scheme" content="light dark">
+    
+    <style>
+        /* Variáveis CSS para facilitar a manutenção da paleta de cores */
+        /* Estilos padrão (tema CLARO) */
+        :root {
+            --cor-primaria: #f8c8dc; /* Rosa claro */
+            --cor-secundaria: #e6a4b4; /* Rosa médio */
+            --cor-destaque: #d77fa1; /* Rosa escuro */
+            --cor-fundo:rgb(249, 230, 230); /* Fundo branco puro */
+            --cor-texto: rgb(74, 74, 74); /* Cinza escuro para texto */
+            --cor-texto-claro: #ffffff; /* Branco para texto em fundos escuros */
+            --sombra-suave: 0 4px 6px rgba(236, 198, 46, 0.1);
+                        
+            
+            /* Variáveis para o Tema CLARO (padrão) */
+            --body-background: var(--cor-fundo);
+            --body-text-color: var(--cor-texto);
+            --card-background: #fff;
+            --card-border: #f0f0f0;
+            --close-button-color: var(--cor-texto);
+            --countdown-bg: #ffffff; /* Fundo da "cartinha" branco */
+            --countdown-title-color: var(--cor-destaque);
+            --countdown-value-bg: var(--cor-texto-claro);
+            --countdown-value-color: var(--cor-destaque);
+            --chapter-number-color: var(--cor-numeracao-capitulo);
+            --button-toggle-bg: #e0e0e0;
+            --button-toggle-border: #ccc;
+            --button-toggle-circle: #fff;
+            --button-toggle-icon: #333;
+
+            /* Botão de continue - Tema CLARO (escondido) */
+            --btn-continue-bg-light: var(--cor-fundo);
+            --btn-continue-text-light: var(--cor-fundo);
+            --btn-continue-border-light: 2px solid var(--cor-fundo);
+        }
+
+        /* Variáveis para o Tema ESCURO (aplicadas via classe .dark-theme) */
+        body.dark-theme {
+            --body-background: #1a1a1a;
+            --body-text-color: #f0f0f0;
+            --card-background: #2a2a2a;
+            --card-border: #3a3a3a;
+            --close-button-color: #f0f0f0;
+            --countdown-bg: #2a2a2a; /* Fundo da "cartinha" cinza escuro no tema escuro */
+            --countdown-title-color: #92b0d0; /* Azul claro para destaque no escuro */
+            --countdown-value-bg: #555;
+            --countdown-value-color: #f0f0f0;
+            --chapter-number-color: #88C0D0; /* Cor específica para numeração no tema escuro */
+            --button-toggle-bg: #333;
+            --button-toggle-border: #555;
+            --button-toggle-circle: #555;
+            --button-toggle-icon: #fff;
+
+            /* Ajustes para as cores que usam var(--cor-xxx) diretamente */
+            --cor-destaque: #92b0d0;
+            --cor-secundaria: #7ba2c5;
+            --cor-primaria: #a2d2ff; /* Um azul mais suave para o centro da flor no tema escuro */
+            --dourado-claro: #CFB53B;
+            --dourado-medio: #A48D3F;
+            --dourado-escuro: #7A6A2C;
+            --dourado-sombra: rgba(255, 255, 255, 0.1);
+
+            /* Botão de continue - Tema ESCURO (visível com flor) */
+            --btn-continue-bg-dark: transparent; /* Fundo transparente, pois o SVG é a forma */
+            --btn-continue-text-dark: var(--cor-texto-claro); /* Texto branco (oculto) */
+            --btn-continue-border-dark: 2px solid var(--cor-destaque); /* Borda do destaque do tema escuro (usada no SVG) */
+        }
+
+        /* Reset e estilos básicos */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'ROBOTO', sans-serif;
+            background-color: var(--body-background);
+            color: var(--body-text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: background-color 0.3s ease, color 0.3s ease; /* Transição suave */
+        }
+
+        /* Novo container para a animação de corações */
+        .heart-animation-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .cartinha-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        /* Container principal */
+        .container {
+            width: 100%;
+            max-width: 800px;
+            padding: 2rem;
+            text-align: center;
+            z-index: 1;
+            position: relative;
+            margin-top: 50px; /* Para não sobrepor o botão de tema */
+        }
+
+        /* Título principal */
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--cor-destaque);
+            transition: color 0.3s ease;
+        }
+
+        /* Subtítulo */
+        h2 {
+            font-size: 1.8rem;
+            margin-bottom: 2rem;
+            font-weight: normal;
+            color: var(--cor-secundaria);
+            transition: color 0.3s ease;
+        }
+
+        /* Área da "cartinha" */
+        .countdown-container { /* Renomeado para .cartinha-container para clareza */
+            background-color: var(--countdown-bg); /* Será branco no tema claro */
+            border-radius: 15px;
+            padding: 2rem; /* Mais padding para a "cartinha" */
+            margin-bottom: 2rem;
+            box-shadow: var(--sombra-suave);
+            transition: background-color 0.3s ease, color 0.3s ease, border 0.3s ease;
+            text-align: left; /* Alinha o texto da cartinha à esquerda */
+            max-width: 500px; /* Largura máxima para emular uma carta */
+            margin: 0 auto 2rem auto; /* Centraliza a "cartinha" */
+            border: 1px solid #ddd; /* Borda suave para a cartinha */
+            font-family: 'Dancing Script', cursive; /* Fonte mais cursiva para a cartinha */
+            font-size: 1.5rem; /* Tamanho da fonte para o conteúdo da cartinha */
+            line-height: 1.6; /* Espaçamento entre linhas */
+            color: var(--body-text-color); /* Garante que a cor do texto mude com o tema */
+        }
+
+        .cartinha-conteudo {
+            margin-bottom: 1rem;
+            font-size: 1.3rem; /* Tamanho da fonte para o conteúdo da cartinha */
+        }
+
+        .cartinha-assinatura {
+            text-align: right; /* Alinha a assinatura à direita */
+            margin-top: 1.5rem;
+            font-size: 1.6rem;
+            color: var(--cor-destaque);
+        }
+
+        /* Botão "Continue" */
+        .btn-continue {
+            /* Estilo padrão (tema claro) - Escondido */
+            background-color: var(--btn-continue-bg-light);
+            color: var(--btn-continue-text-light);
+            border: var(--btn-continue-border-light);
+            border-radius: 0; /* A forma será definida pelo SVG no tema escuro */
+            padding: 0; /* Remove padding para o SVG preencher o botão */
+            font-size: 0; /* Oculta o texto */
+            text-indent: -9999px; /* Oculta o texto movendo-o para fora da tela */
+            cursor: pointer;
+            transition: all 0.3s ease, visibility 0s 0.3s, opacity 0.3s ease; /* Transição de visibilidade e opacidade */
+            box-shadow: none; /* Remove sombra no tema claro */
+            margin-top: 1rem;
+            text-decoration: none; /* Remove sublinhado do link */
+            display: inline-flex; /* Para centralizar o texto */
+            align-items: center;
+            justify-content: center;
+            width: 120px; /* Define um tamanho fixo para a flor */
+            height: 120px; /* Define um tamanho fixo para a flor */
+            visibility: hidden; /* Esconde o botão por padrão */
+            opacity: 0; /* Começa com opacidade 0 */
+            pointer-events: none; /* Desativa eventos de clique quando invisível */
+            position: relative;
+            overflow: hidden; /* Garante que a flor não transborde */
+        }
+
+        /* Estilo para o botão no tema escuro */
+        body.dark-theme .btn-continue {
+            background-color: transparent; /* Fundo transparente, o SVG define a aparência */
+            color: var(--btn-continue-text-dark); /* Cor do texto (oculto) */
+            border: none; /* A borda será definida pelo SVG */
+            box-shadow: var(--sombra-suave); /* Adiciona sombra */
+            visibility: visible; /* Torna o botão visível */
+            opacity: 1; /* Transiciona para opacidade total */
+            pointer-events: auto; /* Habilita eventos de clique */
+            transition: all 0.3s ease; /* Transição para o modo escuro */
+
+            /* Adiciona o SVG de flor como background-image */
+            background-image: var(--btn-continue-flower-svg); /* Variável JS que conterá o SVG */
+            background-size: 100%; /* Faz a flor preencher o botão */
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .btn-continue:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        }
+
+        .btn-continue:active {
+            transform: translateY(0);
+        }
+
+        /* Estilos para os corações caindo */
+        .coracao {
+            position: absolute;
+            top: -50px;
+            color: var(--cor-secundaria);
+            font-size: 20px;
+            animation: cair linear forwards;
+        }
+
+        @keyframes cair {
+            to {
+                transform: translateY(calc(100vh + 50px));
+            }
+        }
+
+        /* Theme Toggle Button Styling */
+        .theme-toggle-button {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--button-toggle-bg);
+            border: 1px solid var(--button-toggle-border);
+            border-radius: 20px;
+            width: 60px;
+            height: 30px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            padding: 0;
+            overflow: hidden;
+            transition: background-color 0.3s ease, border-color 0.3s ease;
+            z-index: 1000;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .theme-toggle-button::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 26px;
+            height: 26px;
+            background-color: var(--button-toggle-circle);
+            border-radius: 50%;
+            transition: transform 0.3s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Move o círculo para o modo escuro */
+        body.dark-theme .theme-toggle-button::before {
+            transform: translateX(30px);
+        }
+
+        .theme-icon {
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            color: var(--button-toggle-icon);
+            transition: opacity 0.3s ease, color 0.3s ease;
+        }
+
+        .sun-icon {
+            left: 8px;
+            top: 5px;
+        }
+
+        .moon-icon {
+            right: 8px;
+            top: 5px;
+        }
+
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* Estilos responsivos */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            h2 {
+                font-size: 1.5rem;
+            }
+            
+            .countdown-container {
+                padding: 1.5rem;
+                font-size: 1.3rem;
+            }
+            
+            .btn-continue {
+                width: 80px;
+                height: 80px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 1rem;
+            }
+            
+            h1 {
+                font-size: 1.8rem;
+            }
+            
+            h2 {
+                font-size: 1.2rem;
+            }
+            
+            .countdown-container {
+                padding: 1rem;
+                font-size: 1.1rem;
+            }
+            
+            .btn-continue {
+                width: 70px;
+                height: 70px;
+            }
+        }
+    </style>
+</head>
+<body class="light-theme">
+    <div class="heart-animation-container"></div>
+
+    <button id="theme-toggle" class="theme-toggle-button" aria-label="Alternar tema claro/escuro">
+        <svg class="theme-icon sun-icon" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 3c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9c0-.46-.04-.92-.1-1.36a5.002 5.002 0 0 1-7.89-5.69C10.74 3.09 11.36 3 12 3zm0 2a7 7 0 1 0 0 14c-1.39 0-2.73-.25-3.98-.73C5.7 17.5 4 14.9 4 12c0-3.31 2.69-6 6-6h2c.07 0 .14.01.2.02a6.99 6.99 0 0 1 .8.09 5 5 0 0 1 1.76-1.76A8.985 8.985 0 0 0 12 3zM12 5.5l1.5-1.5L12 2.5l-1.5 1.5L12 5.5zm0 13l-1.5 1.5L12 21.5l1.5-1.5L12 18.5zm5.5-5.5l1.5-1.5L21.5 12l-1.5 1.5L17.5 12zm-11 0l-1.5-1.5L2.5 12l1.5 1.5L6.5 12z"/>
+        </svg>
+
+        <svg class="theme-icon moon-icon hidden" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12 3a9 9 0 0 0 9 9c0 4.97-4.03 9-9 9a9 9 0 0 1 0-18z"/>
+        </svg>
+    </button>
+
+    <div class="container">
+        
+        <h2>Espero que qunando a <strong> luz deste dia cair </strong>, estarmos ainda mais próximos...</h2>
+        
+        <div class="countdown-container">
+            <p>Meu Amor,</p>
+            <br>
+            <p class="cartinha-conteudo">
+                Esta é apenas uma pequena amostra do carinho que sinto por você.
+                Cada dia ao seu lado é uma nova aventura e eu mal posso esperar
+                para o que o futuro nos reserva. Você ilumina meus dias! E conforta minhas <strong style="font-size: 25px;"> noites</strong>!
+                <br><br>
+                E como  <strong style="font-size: 25px;">uma flor</strong> alegra minha vida!
+                
+                <p class="cartinha-assinatura">Seu MôBem ❤️</p>
+            
+            </p>
+            
+                       
+        </div>
+        <div>
+            <a align="center" href="flower.html" class="btn-continue">
+                Continue  
+            </a>
+                 
+            </div>
+        
+    </div>
+    
+    <script>
+        // Função para criar e animar corações caindo
+        function criarCoracoes() {
+            const heartContainer = document.querySelector('.heart-animation-container');
+            const larguraTela = window.innerWidth;
+            
+            setInterval(() => {
+                const coracao = document.createElement('div');
+                coracao.classList.add('coracao');
+                
+                const posicaoX = Math.random() * larguraTela;
+                coracao.style.left = `${posicaoX}px`;
+                
+                const tamanho = Math.random() * 20 + 10;
+                coracao.style.fontSize = `${tamanho}px`;
+                
+                const velocidade = Math.random() * 5 + 3;
+                coracao.style.animationDuration = `${velocidade}s`;
+                
+                const opacidade = Math.random() * 0.5 + 0.5;
+                coracao.style.opacity = opacidade;
+                
+                coracao.innerHTML = '❤️';
+                
+                heartContainer.appendChild(coracao);
+                
+                setTimeout(() => {
+                    coracao.remove();
+                }, velocidade * 1000);
+            }, 300); // Cria um novo coração a cada 300ms
+        }
+
+        // FUNÇÕES PARA O TEMA CLARO/ESCURO
+        const themeToggleBtn = document.getElementById('theme-toggle');
+        const body = document.body;
+        const sunIcon = document.querySelector('.sun-icon');
+        const moonIcon = document.querySelector('.moon-icon');
+
+        // Função para aplicar o tema ao body e atualizar a visibilidade dos ícones
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                body.classList.add('dark-theme');
+                body.classList.remove('light-theme');
+                sunIcon.classList.add('hidden'); // Esconde o sol
+                moonIcon.classList.remove('hidden'); // Mostra a lua
+                localStorage.setItem('theme', 'dark'); // Salva a preferência
+            } else { // theme === 'light'
+                body.classList.add('light-theme');
+                body.classList.remove('dark-theme');
+                sunIcon.classList.remove('hidden'); // Mostra o sol
+                moonIcon.classList.add('hidden'); // Esconde a lua
+                localStorage.setItem('theme', 'light'); // Salva a preferência
+            }
+            // Chama a função para atualizar o SVG da flor no botão
+            updateContinueButtonFlower();
+        }
+
+        // Função para atualizar o SVG da flor no botão de continuar
+        function updateContinueButtonFlower() {
+            const btnContinue = document.querySelector('.btn-continue');
+            const rootStyle = getComputedStyle(document.documentElement);
+
+            if (body.classList.contains('dark-theme')) {
+                const petalColor = rootStyle.getPropertyValue('--cor-secundaria').trim();
+                const centerColor = rootStyle.getPropertyValue('--cor-primaria').trim();
+                const strokeColor = rootStyle.getPropertyValue('--cor-destaque').trim(); // Cor para a borda da flor
+
+                // SVG com 8 pétalas e um centro, com stroke (borda)
+                const svgContent = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <g fill="${petalColor}" stroke="${strokeColor}" stroke-width="0.5">
+                            <path d="M12 0 C20 4 14 8 12 12 C14 8 7 4 12 0 Z" transform="rotate(0 12 12)"/>
+                            <path d="M12 0 C20 4 14 8 12 12 C14 8 7 4 12 0 Z" transform="rotate(45 12 12)"/>
+                            <path d="M12 0 C20 4 14 8 12 12 C14 8 7 4 12 0 Z" transform="rotate(90 12 12)"/>
+                            <path d="M12 0 C20 4 14 8 12 12 C14 8 7 4 12 0 Z" transform="rotate(135 12 12)"/>
+                            <path d="M12 0 C20 4 14 8 12 12 C14 8 7 4 12 0 Z" transform="rotate(180 12 12)"/>
+                            <path d="M12 0 C20 4 14 8 12 12 C14 8 7 4 12 0 Z" transform="rotate(225 12 12)"/>
+                            <path d="M12 0 C20 4 14 8 12 12 C14 8 7 4 12 0 Z" transform="rotate(270 12 12)"/>
+                            <path d="M12 0 C20 4 14 8 12 12 C14 8 7 4 12 0 Z" transform="rotate(315 12 12)"/>
+                        </g>
+                        <circle cx="12" cy="12" r="4" fill="${centerColor}" stroke="${strokeColor}" stroke-width="0.5"/>
+                    </svg>
+                `;
+                const encodedSvg = encodeURIComponent(svgContent);
+                btnContinue.style.setProperty('--btn-continue-flower-svg', `url("data:image/svg+xml,${encodedSvg}")`);
+                btnContinue.style.backgroundImage = `var(--btn-continue-flower-svg)`;
+                btnContinue.style.backgroundColor = 'transparent'; /* Garante fundo transparente */
+                btnContinue.style.border = 'none'; /* Garante que a borda seja do SVG */
+            } else {
+                btnContinue.style.backgroundImage = 'none';
+                btnContinue.style.backgroundColor = 'var(--btn-continue-bg-light)';
+                btnContinue.style.border = 'var(--btn-continue-border-light)';
+            }
+        }
+
+        // Inicializa as funcionalidades quando o DOM estiver carregado
+        document.addEventListener('DOMContentLoaded', function() {
+            // Inicia a animação dos corações
+            criarCoracoes();
+            
+            // SEMPRE iniciar em modo claro
+            applyTheme('light');
+
+            // Alterna o tema ao clicar no botão
+            themeToggleBtn.addEventListener('click', () => {
+                if (body.classList.contains('dark-theme')) {
+                    applyTheme('light');
+                } else {
+                    applyTheme('dark');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
